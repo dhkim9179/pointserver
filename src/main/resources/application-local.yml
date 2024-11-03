@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+policy:
+  max-balance: 500
+  one-time-max-earn-point: 100000

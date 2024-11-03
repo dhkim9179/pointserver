@@ -1,0 +1,29 @@
+server:
+  shutdown: graceful
+  servlet:
+    context-path: /point
+
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:test
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+
+policy:
+  max-balance: 1000
+  one-time-max-earn-point: 100000
+  expire:
+    default-period: 365 # day
+    min-period: 1 # day
+    max-period: 5 # year
+
