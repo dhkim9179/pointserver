@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface ExpireRepositoryCustom {
     List<MemberPointExpire> findExpires(long memberId);
-    void updateExpire(long id, int amount);
+    void increaseExpireAmount(long id, int amount);
+    void decreaseExpireAmount(long id, int amount);
 }

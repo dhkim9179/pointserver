@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CancelHistoryService {
     private final CancelHistoryRepository cancelHistoryRepository;
-    
+
     public void insertHistory(
             long cancelId,
             int amount,
@@ -19,7 +19,7 @@ public class CancelHistoryService {
         memberPointCancelHistory.setMemberPointCancelId(cancelId);
         memberPointCancelHistory.setAmount(amount);
         memberPointCancelHistory.setDescription(description);
-        
+
         cancelHistoryRepository.save(memberPointCancelHistory);
     }
 }

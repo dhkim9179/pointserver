@@ -1,5 +1,6 @@
 package com.example.pointserver.earn.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -31,6 +32,10 @@ public class Earn {
         private String description;
 
         private LocalDate expireDay;
+
+        @NotNull(message = "필수 입력값입니다")
+        @JsonProperty("isAdmin")
+        private boolean isAdmin;
     }
 
     @Data

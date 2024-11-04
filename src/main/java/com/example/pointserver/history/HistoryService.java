@@ -6,6 +6,8 @@ import com.example.pointserver.history.repository.HistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class HistoryService {
@@ -35,6 +37,15 @@ public class HistoryService {
         memberPointHistory.setDescription(description);
 
         return historyRepository.save(memberPointHistory).getId();
+    }
+
+    /**
+     * 이력 조회
+     * @param orderNo 주문번호
+     * @return 이력
+     */
+    public List<MemberPointHistory> findHistory(String orderNo) {
+        return historyRepository.findByOrderNo(orderNo);
     }
 
     /**

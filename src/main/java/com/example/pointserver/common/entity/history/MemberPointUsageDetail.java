@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "member_point_expire_use")
+@Table(name = "member_point_usage_detail")
 @NoArgsConstructor
 public class MemberPointUsageDetail {
     @Id
@@ -34,5 +34,5 @@ public class MemberPointUsageDetail {
     @CreatedDate
     @Column(nullable = false)
     @Comment("생성일")
-    private LocalDateTime createDate;
+    private LocalDateTime createDate = LocalDateTime.now();
 }

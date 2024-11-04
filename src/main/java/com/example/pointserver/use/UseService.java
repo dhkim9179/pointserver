@@ -3,6 +3,7 @@ package com.example.pointserver.use;
 import com.example.pointserver.cancel.CancelService;
 import com.example.pointserver.cancel.history.CancelHistoryService;
 import com.example.pointserver.common.entity.history.MemberPointExpire;
+import com.example.pointserver.common.entity.history.MemberPointHistory;
 import com.example.pointserver.common.enums.CancelType;
 import com.example.pointserver.common.enums.PointAction;
 import com.example.pointserver.expire.ExpireService;
@@ -12,7 +13,7 @@ import com.example.pointserver.history.model.HistoryInfo;
 import com.example.pointserver.use.detail.UseDetailService;
 import com.example.pointserver.use.detail.model.UseDetail;
 import com.example.pointserver.use.repository.UseRepository;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +42,16 @@ public class UseService {
      */
     public Integer findBalance(long memberId) {
         return useRepository.findBalance(memberId);
+    }
+
+    /**
+     * 주문번호 중복 확인
+     * @param orderNo
+     * @return
+     */
+    public boolean isDuplicateOrderNo(String orderNo) {
+        List<MemberPointHistory> memberPointHistories = historyService.findHistory(orderNo);
+        return !memberPointHistories.isEmpty();
     }
 
     /**
@@ -117,7 +128,7 @@ public class UseService {
 
         // 소멸 금액 업데이트
         for (ExpireUpdate expireUpdate : expireUpdates) {
-            expireService.updateExpire(expireUpdate.getExpireId(), expireUpdate.getAmount());
+            expireService.decreaseExpireAmount(expireUpdate.getExpireId(), expireUpdate.getAmount());
             useDetailService.insertDetail(
                     historyId,
                     expireUpdate.getExpireId(),
@@ -146,26 +157,18 @@ public class UseService {
         useRepository.increaseBalance(memberId, amount);
 
         // 소멸 처리
+        int calculateAmount = amount;
         for (UseDetail useDetail : useDetailList) {
-            if (useDetail.getExpireDay().isBefore(LocalDate.now())) {
-                // 소멸 금액 신규 저장
-                expireService.insertExpire(
-                        memberId,
-                        orderNo,
-                        LocalDate.now().plusDays(expirePeriod),
-                        useDetail.getUseAmount(),
-                        false
-                );
+            calculateAmount -= useDetail.getUseAmount();
+            if (calculateAmount <= 0) { // 해당 금액만 처리
+                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount() + calculateAmount, useDetail);
+                break;
             } else {
-                // 소멸 금액 복구
-                expireService.updateExpire(
-                        useDetail.getExpireId(),
-                        useDetail.getUseAmount()
-                );
+                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount(), useDetail);
             }
         }
 
-        // 취소 테이블 저장
+        // 취소 저장
         long cancelId = cancelService.insertCancel(
                 memberId,
                 orderNo,
@@ -204,32 +207,24 @@ public class UseService {
         // 잔액 업데이트
         useRepository.increaseBalance(memberId, amount);
 
-        // 소멸 처리
+        // 소멸금액 복구
+        int calculateAmount = amount;
         for (UseDetail useDetail : useDetailList) {
-            if (useDetail.getExpireDay().isBefore(LocalDate.now())) {
-                // 소멸 금액 신규 저장
-                expireService.insertExpire(
-                        memberId,
-                        orderNo,
-                        LocalDate.now().plusDays(expirePeriod),
-                        useDetail.getUseAmount(),
-                        false
-                );
+            calculateAmount -= useDetail.getUseAmount();
+            if (calculateAmount <= 0) { // 해당 금액만 처리
+                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount() + calculateAmount, useDetail);
+                break;
             } else {
-                // 소멸 금액 복구
-                expireService.updateExpire(
-                        useDetail.getExpireId(),
-                        useDetail.getUseAmount()
-                );
+                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount(), useDetail);
             }
         }
 
-        // 취소 테이블 저장
+        // 취소 저장
         long cancelId = cancelService.insertCancel(
                 memberId,
                 orderNo,
                 PointAction.USE,
-                CancelType.ALL,
+                CancelType.PARTIAL,
                 amount,
                 cancelableAmount
         );
@@ -265,29 +260,22 @@ public class UseService {
         // 잔액 업데이트
         useRepository.increaseBalance(memberId, amount);
 
-        // 소멸 처리
+        // 소멸금액 복구
+        int calculateAmount = amount;
         for (UseDetail useDetail : useDetailList) {
-            if (useDetail.getExpireDay().isBefore(LocalDate.now())) {
-                // 소멸 금액 신규 저장
-                expireService.insertExpire(
-                        memberId,
-                        orderNo,
-                        LocalDate.now().plusDays(expirePeriod),
-                        useDetail.getUseAmount(),
-                        false
-                );
+            calculateAmount -= useDetail.getUseAmount();
+            if (calculateAmount <= 0) { // 해당 금액만 처리
+                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount() + calculateAmount, useDetail);
+                break;
             } else {
-                // 소멸 금액 복구
-                expireService.updateExpire(
-                        useDetail.getExpireId(),
-                        useDetail.getUseAmount()
-                );
+                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount(), useDetail);
             }
         }
 
-        // 취소 테이블 저장
+        // 취소 저장
         cancelService.updateCancel(
                 cancelId,
+                amount,
                 cancelableAmount
         );
 
@@ -296,6 +284,45 @@ public class UseService {
                 cancelId,
                 amount,
                 description
+        );
+    }
+
+    private void restoreExpireAmount(
+            long memberId,
+            String orderNo,
+            int amount,
+            UseDetail useDetail
+    ) {
+        if (useDetail.getExpireDay().isBefore(LocalDate.now())) {
+            // 소멸 금액 신규 저장
+            expireService.insertExpire(
+                    memberId,
+                    orderNo,
+                    LocalDate.now().plusDays(expirePeriod),
+                    amount,
+                    false
+            );
+
+            // 이력 저장
+            historyService.insertHistory(
+                    memberId,
+                    orderNo,
+                    PointAction.EARN.getCode(),
+                    amount,
+                    "사용취소 시 적립만료일에 따른 신규 적립"
+            );
+        } else {
+            // 소멸 금액 복구
+            expireService.increaseExpireAmount(
+                    useDetail.getExpireId(),
+                    amount
+            );
+        }
+
+        // 소멸사용금액 차감
+        useDetailService.updateDetail(
+                useDetail.getUsageDetailId(),
+                amount
         );
     }
 }

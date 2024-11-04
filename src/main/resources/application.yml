@@ -1,7 +1,5 @@
 server:
   shutdown: graceful
-  servlet:
-    context-path: /point
 
 spring:
   datasource:
@@ -12,6 +10,9 @@ spring:
   h2:
     console:
       enabled: true
+#  sql:
+#    init:
+#      data-locations: classpath*:db/sql/data.sql
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     defer-datasource-initialization: true

@@ -56,7 +56,7 @@ public class CancelService {
      * @param cancelId 취소 아이디
      * @param cancelableAmount 앞으로 취소 가능한 금액
      */
-    public void updateCancel(long cancelId, int cancelableAmount) {
-        cancelRepository.updateCancel(cancelId, cancelableAmount);
+    public void updateCancel(long cancelId, int amount, int cancelableAmount) {
+        cancelRepository.updateCancel(cancelId, amount, cancelableAmount);
     }
 }

@@ -24,9 +24,10 @@ public class CancelRepositoryCustomImpl implements CancelRepositoryCustom {
 
     @Override
     @Transactional
-    public void updateCancel(long cancelId, int cancelableAmount) {
+    public void updateCancel(long cancelId, int amount, int cancelableAmount) {
         jpaQueryFactory
                 .update(memberPointCancel)
+                .set(memberPointCancel.amount, memberPointCancel.amount.add(amount))
                 .set(memberPointCancel.cancelableAmount, cancelableAmount)
                 .where(memberPointCancel.id.eq(cancelId))
                 .execute();

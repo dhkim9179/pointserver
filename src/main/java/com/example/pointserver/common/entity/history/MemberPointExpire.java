@@ -50,4 +50,8 @@ public class MemberPointExpire {
     @Column(nullable = false)
     @Comment("수정일")
     private LocalDateTime updateDate = LocalDateTime.now();
+
+    public boolean getAdmin() {
+        return isAdmin;
+    }
 }

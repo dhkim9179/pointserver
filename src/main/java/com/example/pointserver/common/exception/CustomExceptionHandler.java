@@ -3,6 +3,7 @@ package com.example.pointserver.common.exception;
 import com.example.pointserver.common.response.ErrorResponse;
 import com.example.pointserver.common.response.ResponseCode;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -29,7 +30,6 @@ public class CustomExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     public ErrorResponse exceptionHandler(Exception ex, HttpServletResponse response) {
         ResponseCode responseCode = ResponseCode.UNDEFINED_EXCEPTION;
-        int responseStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
 
         // exception에 따라 response code 및 http status를 셋팅
         if (ex instanceof MissingServletRequestParameterException ||
@@ -39,14 +39,15 @@ public class CustomExceptionHandler {
             ex instanceof MethodArgumentTypeMismatchException ||
             ex instanceof HttpMessageNotReadableException
         ) {
-            response.setStatus(HttpStatus.BAD_REQUEST.value());
             responseCode = ResponseCode.MISSING_REQUIRED_PARAMETER;
+        } else if (ex instanceof DataIntegrityViolationException) {
+            responseCode = ResponseCode.DUPLICATE_ORDER_NO;
         }
 
-        response.setStatus(responseStatus);
+        response.setStatus(responseCode.getStatus());
         return ErrorResponse.builder()
                 .code(responseCode.getCode())
-                .message(ex.getMessage())
+                .message(responseCode.getMessage())
                 .detail(ex.getClass().getName())
                 .build();
     }

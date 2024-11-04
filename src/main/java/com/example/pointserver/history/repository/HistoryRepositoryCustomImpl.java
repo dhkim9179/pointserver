@@ -29,6 +29,7 @@ public class HistoryRepositoryCustomImpl implements HistoryRepositoryCustom {
                 .join(memberPointExpire).on(memberPointHistory.memberId.eq(memberPointExpire.memberId)).on(memberPointHistory.orderNo.eq(memberPointExpire.orderNo))
                 .where(memberPointHistory.orderNo.eq(orderNo))
                 .where(memberPointHistory.memberId.eq(memberId))
+                .where(memberPointHistory.action.eq("earn"))
                 .fetchOne();
     }
 
@@ -41,6 +42,7 @@ public class HistoryRepositoryCustomImpl implements HistoryRepositoryCustom {
                 .from(memberPointHistory)
                 .where(memberPointHistory.orderNo.eq(orderNo))
                 .where(memberPointHistory.memberId.eq(memberId))
+                .where(memberPointHistory.action.eq("use"))
                 .fetchOne();
     }
 }

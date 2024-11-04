@@ -20,7 +20,7 @@ public class MemberPointCancel {
     @Comment("id")
     private long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     @Comment("회원 아이디")
     private long memberId;
 
@@ -40,7 +40,7 @@ public class MemberPointCancel {
     @Comment("취소 금액")
     private int amount;
 
-    @Column(nullable = false, columnDefinition = "DEFAULT 0")
+    @Column(nullable = false)
     @Comment("취소 가능한 금액")
     private int cancelableAmount;
 

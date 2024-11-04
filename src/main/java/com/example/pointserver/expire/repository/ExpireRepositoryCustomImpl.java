@@ -26,7 +26,17 @@ public class ExpireRepositoryCustomImpl implements ExpireRepositoryCustom {
 
     @Override
     @Transactional
-    public void updateExpire(long id, int amount) {
+    public void increaseExpireAmount(long id, int amount) {
+        jpaQueryFactory
+                .update(memberPointExpire)
+                .set(memberPointExpire.expireAmount, memberPointExpire.expireAmount.add(amount))
+                .where(memberPointExpire.id.eq(id))
+                .execute();
+    }
+
+    @Override
+    @Transactional
+    public void decreaseExpireAmount(long id, int amount) {
         jpaQueryFactory
                 .update(memberPointExpire)
                 .set(memberPointExpire.expireAmount, memberPointExpire.expireAmount.subtract(amount))

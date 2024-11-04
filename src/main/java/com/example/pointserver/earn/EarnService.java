@@ -4,6 +4,7 @@ import com.example.pointserver.cancel.CancelService;
 import com.example.pointserver.cancel.history.CancelHistoryService;
 import com.example.pointserver.common.entity.MemberPoint;
 import com.example.pointserver.common.entity.cancel.MemberPointCancel;
+import com.example.pointserver.common.entity.history.MemberPointHistory;
 import com.example.pointserver.common.enums.CancelType;
 import com.example.pointserver.common.enums.PointAction;
 import com.example.pointserver.earn.repository.EarnRepository;
@@ -11,10 +12,12 @@ import com.example.pointserver.expire.ExpireService;
 import com.example.pointserver.history.HistoryService;
 import com.example.pointserver.history.model.HistoryInfo;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +35,16 @@ public class EarnService {
      */
     public Integer findBalance(long memberId) {
         return earnRepository.findBalance(memberId);
+    }
+
+    /**
+     * 주문번호 중복 확인
+     * @param orderNo
+     * @return
+     */
+    public boolean isDuplicateOrderNo(String orderNo) {
+        List<MemberPointHistory> memberPointHistories = historyService.findHistory(orderNo);
+        return !memberPointHistories.isEmpty();
     }
 
     /**
@@ -117,7 +130,7 @@ public class EarnService {
         earnRepository.decreaseBalance(memberId, amount);
 
         // 소멸 금액 차감
-        expireService.updateExpire(expireId, amount);
+        expireService.decreaseExpireAmount(expireId, amount);
 
         // 취소 저장
         long cancelId = cancelService.insertCancel(
@@ -129,7 +142,6 @@ public class EarnService {
                 0
         );
 
-        // 취소 이력 저장
         cancelHistoryService.insertHistory(
                 cancelId,
                 amount,

@@ -23,7 +23,7 @@ public class MemberPointHistory {
     @Comment("회원 아이디")
     private long memberId;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     @Comment("주문번호")
     private String orderNo;
 

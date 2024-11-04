@@ -19,7 +19,7 @@ public class UseDetailService {
      * @return 사용 상세 내역
      */
     public List<UseDetail> findDetail(String orderNo) {
-        return useDetailRepository.findExpireUses(orderNo);
+        return useDetailRepository.findUsageDetail(orderNo);
     }
 
     /**
@@ -35,5 +35,14 @@ public class UseDetailService {
         memberPointUsageDetail.setAmount(amount);
 
         useDetailRepository.save(memberPointUsageDetail);
+    }
+
+    /**
+     * 사용취소 시 차감
+     * @param id
+     * @param amount
+     */
+    public void updateDetail(long id, int amount) {
+        useDetailRepository.updateUsageDetail(id, amount);
     }
 }

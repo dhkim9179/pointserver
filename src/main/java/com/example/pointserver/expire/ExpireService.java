@@ -38,8 +38,12 @@ public class ExpireService {
         expireRepository.save(memberPointExpire);
     }
 
-    public void updateExpire(long id, int amount) {
-        expireRepository.updateExpire(id, amount);
+    public void increaseExpireAmount(long id, int amount) {
+        expireRepository.increaseExpireAmount(id, amount);
+    }
+
+    public void decreaseExpireAmount(long id, int amount) {
+        expireRepository.decreaseExpireAmount(id, amount);
     }
 
     public List<MemberPointExpire> findExpires(long memberId) {

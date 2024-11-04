@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/v1/earn")
+@RequestMapping("/point/v1/earn")
 @RequiredArgsConstructor
 public class EarnController {
 
@@ -48,7 +48,12 @@ public class EarnController {
 
         // 1회 적립 가능한 최대 금액 확인
         if (request.getPoint() > oneTimeMaxEarnPoint) {
-            throw new CustomException(ResponseCode.MISSING_REQUIRED_PARAMETER);
+            throw new CustomException(ResponseCode.POINT_EXCEED_LIMIT);
+        }
+
+        // 이미 처리된 주문번호인지 확인
+        if (earnService.isDuplicateOrderNo(request.getOrderNo())) {
+            throw new CustomException(ResponseCode.DUPLICATE_ORDER_NO);
         }
 
         // 포인트 잔액 조회
@@ -62,7 +67,7 @@ public class EarnController {
 
         // 최대 잔액 확인
         if (balance + request.getPoint() > maxBalance) {
-            throw new CustomException(ResponseCode.MISSING_REQUIRED_PARAMETER);
+            throw new CustomException(ResponseCode.BALANCE_EXCEED_LIMIT);
         }
 
         // 만료일 확인
@@ -72,7 +77,7 @@ public class EarnController {
             if (request.getExpireDay().isBefore(LocalDate.now().plusDays(minExpirePeriod)) ||
                 request.getExpireDay().isAfter(LocalDate.now().plusYears(maxExpirePeriod))
             ) {
-                throw new CustomException(ResponseCode.MISSING_REQUIRED_PARAMETER);
+                throw new CustomException(ResponseCode.INVALID_EXPIRE_PERIOD);
             }
 
             // 유효성을 통과한 경우, 요청한 값으로 저장
@@ -87,7 +92,7 @@ public class EarnController {
                 expireDay,
                 request.getDescription(),
                 isNewMember,
-                false
+                request.isAdmin()
         );
 
         return Earn.Response.builder()
@@ -105,7 +110,7 @@ public class EarnController {
     public EarnCancel.Response cancel(@Valid @RequestBody EarnCancel.Request request) {
         // 이미 취소한 주문번호인지 확인
         if (earnService.findCancel(request.getMemberId(), request.getOrderNo()) != null) {
-            throw new CustomException(ResponseCode.MISSING_REQUIRED_PARAMETER);
+            throw new CustomException(ResponseCode.ALREADY_CANCELED);
         }
 
         // 적립 이력 조회
@@ -113,17 +118,17 @@ public class EarnController {
 
         // 이력이 없는 경우
         if (historyInfo == null) {
-            throw new CustomException(ResponseCode.MISSING_REQUIRED_PARAMETER);
+            throw new CustomException(ResponseCode.NO_HISTORY);
         }
 
         // 만료일이 지난 경우
         if (historyInfo.getExpireDay().isBefore(LocalDate.now())) {
-            throw new CustomException(ResponseCode.MISSING_REQUIRED_PARAMETER);
+            throw new CustomException(ResponseCode.EXPIRED);
         }
 
         // 금액을 사용한 경우
         if (historyInfo.getAmount() != historyInfo.getExpireAmount()) {
-            throw new CustomException(ResponseCode.MISSING_REQUIRED_PARAMETER);
+            throw new CustomException(ResponseCode.ALREADY_USE_AMOUNT);
         }
 
         // 적립 취소 이력 생성 및 소멸 금액 차감

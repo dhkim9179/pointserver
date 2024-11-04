@@ -9,12 +9,14 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 public class UseDetail {
+    private long usageDetailId;
     private long expireId;
     private LocalDate expireDay;
     private int useAmount;
 
     @QueryProjection
-    public UseDetail(long expireId, LocalDate expireDay, int useAmount) {
+    public UseDetail(long usageDetailId, long expireId, LocalDate expireDay, int useAmount) {
+        this.usageDetailId = usageDetailId;
         this.expireId = expireId;
         this.expireDay = expireDay;
         this.useAmount = useAmount;
