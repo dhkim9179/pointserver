@@ -64,9 +64,9 @@ where m2.transaction_id = ? /* 적립 거래번호 */
   - 사용 주문번호로 추적할 수 있는 쿼리
 ```bash
 select
-	m2.transaction_id as useTransactionId, /* 사용 주문번호 */
+    m2.transaction_id as useTransactionId, /* 사용 주문번호 */
     m2.amount as useAmount, /* 사용금액 */
-	m3.transaction_id as earnTransactionId, /* 적립 거래번호 (주문 등) */
+    m3.transaction_id as earnTransactionId, /* 적립 거래번호 (주문 등) */
     m3.expire_amount, /* 적립 후 소멸될 금액 */
     m1.amount as usedAmount /* 소멸될 금액에서 사용한 금액 */
     /* m3.expire_amount + m1.amount as usedAmount = m3.transaction_id 의 적립 금액 */
