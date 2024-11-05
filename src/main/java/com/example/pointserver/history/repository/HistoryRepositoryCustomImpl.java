@@ -1,5 +1,6 @@
 package com.example.pointserver.history.repository;
 
+import com.example.pointserver.common.enums.PointAction;
 import com.example.pointserver.history.model.HistoryInfo;
 import com.example.pointserver.history.model.QHistoryInfo_Earn;
 import com.example.pointserver.history.model.QHistoryInfo_Use;
@@ -42,7 +43,7 @@ public class HistoryRepositoryCustomImpl implements HistoryRepositoryCustom {
                 .from(memberPointHistory)
                 .where(memberPointHistory.transactionId.eq(transactionId))
                 .where(memberPointHistory.memberId.eq(memberId))
-                .where(memberPointHistory.action.eq("use"))
+                .where(memberPointHistory.action.eq(PointAction.USE.getCode()))
                 .fetchOne();
     }
 }

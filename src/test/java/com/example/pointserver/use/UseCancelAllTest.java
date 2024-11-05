@@ -2,6 +2,7 @@ package com.example.pointserver.use;
 
 import com.example.pointserver.AbstractPointTest;
 import com.example.pointserver.common.entity.cancel.MemberPointCancel;
+import com.example.pointserver.common.entity.history.MemberPointHistory;
 import com.example.pointserver.common.enums.CancelType;
 import com.example.pointserver.common.enums.PointAction;
 import com.example.pointserver.common.enums.TransactionType;
@@ -20,6 +21,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.List;
 
 public class UseCancelAllTest extends AbstractPointTest {
 
@@ -28,11 +31,12 @@ public class UseCancelAllTest extends AbstractPointTest {
     public void useCancelSuccessTest() throws Exception {
         int memberId = 423458;
         String transactionId = "order_use_cancel_001";
+        String earnTransactionId = transactionId + "1";
 
         // 요청 셋팅
         EarnRequest earnRequest = EarnRequest.builder()
                 .memberId(memberId)
-                .transactionId(transactionId + "1")
+                .transactionId(earnTransactionId)
                 .transactionType(TransactionType.ORDER.getCode())
                 .point(10)
                 .description("적립")
@@ -50,6 +54,9 @@ public class UseCancelAllTest extends AbstractPointTest {
                 .build();
         MockHttpServletResponse useResponseMock = requestUse(useRequest);
         UseResponse useResponse = (UseResponse) JsonUtils.fromJson(useResponseMock.getContentAsString(), UseResponse.class);
+
+        // 만료일이 과거가 되도록 수정
+        expireService.updateExpireDay(memberId, earnTransactionId, LocalDate.now().minusDays(30));
 
         // 전체 취소 요청
         UseCancelRequest useCancelRequest = UseCancelRequest.builder()
@@ -79,6 +86,20 @@ public class UseCancelAllTest extends AbstractPointTest {
         Assertions.assertThat(memberPointCancel.getType()).isEqualTo(CancelType.ALL.getCode());
         Assertions.assertThat(memberPointCancel.getAmount()).isEqualTo(usePoint);
         Assertions.assertThat(memberPointCancel.getCancelableAmount()).isEqualTo(0);
+
+        // 신규 적립 확인
+        List<MemberPointHistory> historyList = historyService.findHistory(transactionId);
+        Assertions.assertThat(historyList).isNotEmpty();
+        Assertions.assertThat(historyList.size()).isEqualTo(2);
+
+        boolean hasNewEarn = false;
+        for (MemberPointHistory history : historyList) {
+            if (history.getAction().equals(PointAction.EARN.getCode())) {
+                hasNewEarn = true;
+                break;
+            }
+        }
+        Assertions.assertThat(hasNewEarn).isEqualTo(true);
     }
 
     @Test

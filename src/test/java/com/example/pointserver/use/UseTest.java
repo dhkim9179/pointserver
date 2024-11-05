@@ -25,7 +25,7 @@ public class UseTest extends AbstractPointTest {
 
     @Test
     @DisplayName("사용성공 - 관리자 적립 없음. 만료일이 짧은 순으로 차감")
-    public void usePointSuccessTest() throws Exception {
+    public void usePointSuccessTestWithoutAdmin() throws Exception {
         int memberId = 323458;
         String transactionId = "order_use_001";
 
@@ -58,7 +58,7 @@ public class UseTest extends AbstractPointTest {
         int balance = useService.findBalance(memberId);
 
         // 사용 요청
-        int usePoint = 15;
+        int usePoint = 5;
         UseRequest useRequest = UseRequest.builder()
                 .memberId(memberId)
                 .transactionId(transactionId)
@@ -98,7 +98,7 @@ public class UseTest extends AbstractPointTest {
 
     @Test
     @DisplayName("사용성공 - 관리자 적립 있음. 만료일은 동일함. 관리자 적립부터 차감해야함")
-    public void usePointSuccessTest2() throws Exception {
+    public void usePointSuccessTestWithAdmin() throws Exception {
         int memberId = 333458;
         String transactionId = "order_use_011";
 
@@ -116,7 +116,7 @@ public class UseTest extends AbstractPointTest {
         // 요청
         requestEarn(earnRequest);
 
-        // 작립 요청
+        // 적립 요청
         String secondEarnTransactionId = transactionId + "2";
         earnRequest = EarnRequest.builder()
                 .memberId(memberId)

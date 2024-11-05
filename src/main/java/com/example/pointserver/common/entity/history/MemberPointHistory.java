@@ -24,11 +24,11 @@ public class MemberPointHistory {
     private long memberId;
 
     @Column(nullable = false)
-    @Comment("거래번호")
+    @Comment("거래 아이디")
     private String transactionId;
 
     @Column(nullable = false)
-    @Comment("거래구분")
+    @Comment("거래 구분")
     private String transactionType;
 
     @Column(nullable = false)

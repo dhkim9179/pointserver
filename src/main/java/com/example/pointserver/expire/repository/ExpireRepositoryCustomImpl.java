@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static com.example.pointserver.common.entity.history.QMemberPointExpire.memberPointExpire;
@@ -41,6 +42,17 @@ public class ExpireRepositoryCustomImpl implements ExpireRepositoryCustom {
                 .update(memberPointExpire)
                 .set(memberPointExpire.expireAmount, memberPointExpire.expireAmount.subtract(amount))
                 .where(memberPointExpire.id.eq(id))
+                .execute();
+    }
+
+    @Override
+    @Transactional
+    public void updateExpireDayForTest(long memberId, String transactionId, LocalDate expireDay) {
+        jpaQueryFactory
+                .update(memberPointExpire)
+                .set(memberPointExpire.expireDay, expireDay)
+                .where(memberPointExpire.memberId.eq(memberId))
+                .where(memberPointExpire.transactionId.eq(transactionId))
                 .execute();
     }
 }

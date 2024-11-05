@@ -49,4 +49,8 @@ public class ExpireService {
     public List<MemberPointExpire> findExpires(long memberId) {
         return expireRepository.findExpires(memberId);
     }
+
+    public void updateExpireDay(long memberId, String transactionId, LocalDate expireDay) {
+        expireRepository.updateExpireDayForTest(memberId, transactionId, expireDay);
+    }
 }
