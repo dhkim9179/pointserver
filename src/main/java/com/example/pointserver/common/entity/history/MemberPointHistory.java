@@ -24,8 +24,12 @@ public class MemberPointHistory {
     private long memberId;
 
     @Column(nullable = false)
-    @Comment("주문번호")
-    private String orderNo;
+    @Comment("거래번호")
+    private String transactionId;
+
+    @Column(nullable = false)
+    @Comment("거래구분")
+    private String transactionType;
 
     @Column(nullable = false)
     @Comment("포인트 동작")

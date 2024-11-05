@@ -24,9 +24,9 @@ public class MemberPointCancel {
     @Comment("회원 아이디")
     private long memberId;
 
-    @Column(nullable = false, unique = true)
-    @Comment("주문번호")
-    private String orderNo;
+    @Column(nullable = false)
+    @Comment("거래번호")
+    private String transactionId;
 
     @Column(nullable = false)
     @Comment("취소 동작")

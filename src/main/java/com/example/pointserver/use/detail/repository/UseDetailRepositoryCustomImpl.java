@@ -19,7 +19,7 @@ public class UseDetailRepositoryCustomImpl implements UseDetailRepositoryCustom 
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<UseDetail> findUsageDetail(String orderNo) {
+    public List<UseDetail> findUsageDetail(String transactionId) {
         return jpaQueryFactory
                 .select(
                         new QUseDetail(
@@ -32,9 +32,10 @@ public class UseDetailRepositoryCustomImpl implements UseDetailRepositoryCustom 
                 .from(memberPointUsageDetail)
                 .join(memberPointExpire).on(memberPointUsageDetail.memberPointExpireId.eq(memberPointExpire.id))
                 .join(memberPointHistory).on(memberPointUsageDetail.memberPointHistoryId.eq(memberPointHistory.id))
-                .where(memberPointHistory.orderNo.eq(orderNo))
-                .orderBy(memberPointExpire.expireDay.asc())
-                .orderBy(memberPointUsageDetail.memberPointExpireId.asc())
+                .where(memberPointHistory.transactionId.eq(transactionId))
+                .orderBy(memberPointExpire.expireDay.desc()) // 최신순부터
+                .orderBy(memberPointExpire.isAdmin.asc()) // 사용자 포인트부터
+                .orderBy(memberPointUsageDetail.memberPointExpireId.desc())
                 .fetch();
 
     }
@@ -48,4 +49,11 @@ public class UseDetailRepositoryCustomImpl implements UseDetailRepositoryCustom 
                 .where(memberPointUsageDetail.id.eq(id))
                 .execute();
     }
+
+    @Override
+    public void findHistoryForTrace(String transactionId) {
+
+    }
+
+
 }

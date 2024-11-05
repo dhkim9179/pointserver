@@ -22,9 +22,20 @@
 + 1회 적립가능 포인트는 1포인트 이상, 10만포인트 이하로 가능하며 1회 최대 적립가능 포인트는 application-${profile}.yml 파일에서 관리한다.
 + 개인별로 보유 가능한 무료포인트의 최대금액 제한이 존재하며 application-${profile}.yml 파일에서 관리한다.
 + 특정 시점에 적립된 포인트는 1원단위까지 어떤 주문에서 사용되었는지 추적할 수 있어야 한다.
-  - 확인 가능한 쿼리
+  - 적립 거래번호로 사용 주문내역을 모두 추적할 수 있는 쿼리
 ```bash
-
+select
+	m2.transaction_id as earnTransactionId, /* 적립 거래번호 */
+    m2.expire_amount as expireAmount, /* 소멸금액 */
+    m1.amount as usedAmount, /* 소멸금액에서 사용한 금액 */
+    (m2.expire_amount + m1.amount) earnAmount, /* 적립 거래번호의 총 적립금액 */
+    m3.transaction_id as useTransactionId, /* 사용 주문번호 */
+    m3.amount as useAmount /* 사용 금액 */
+from member_point_usage_detail m1
+join member_point_expire m2 on m1.member_point_expire_id = m2.id
+join member_point_history m3 on m1.member_point_history_id = m3.id
+where m2.transaction_id = ? /* 적립 거래번호 */
+;
 ```
 
 + 포인트 적립은 관리자가 수기로 지급할 수 있으며, 수기지급한 포인트는 다른 적립과 구분되어 식별할 수 있어야 한다.
@@ -43,9 +54,20 @@
   - 주문만 있다고 가정하고 개발하였다,
 
 + 포인트 사용시에는 주문번호를 함께 기록하여 어떤 주문에서 얼마의 포인트를 사용했는지 식별할 수 있어야 한다.
-  - 확인할 수 있는 쿼리
+  - 사용 주문번호로 추적할 수 있는 쿼리
 ```bash
-
+select
+	m2.transaction_id as useTransactionId, /* 사용 주문번호 */
+    m2.amount as useAmount, /* 사용금액 */
+	m3.transaction_id as earnTransactionId, /* 적립 거래번호 (주문 등) */
+    m3.expire_amount, /* 적립 후 소멸될 금액 */
+    m1.amount as usedAmount /* 소멸될 금액에서 사용한 금액 */
+    /* m3.expire_amount + m1.amount as usedAmount = m3.transaction_id 의 적립 금액 */
+from member_point_usage_detail m1
+join member_point_history m2 on m1.member_point_history_id = m2.id
+join member_point_expire m3 on member_point_expire_id = m3.id
+where m2.transaction_id = ? /* 사용 주문번호로 조회 */
+; 
 ```
 
 + 포인트 사용시에는 관리자가 수기 지급한 포인트가 우선 사용되어야 하며, 만료일이 짧게 남은 순서로 사용해야 한다.
@@ -77,8 +99,20 @@
 ./gradlew bootJar
 ```
 
-## Run App
+### Run App
 ```bash
 java -jar ./build/libs/pointserver-1.0.0-SNAPSHOT.jar --spring.profiles.active=${profileName}
 # profileName : 'default' | 'local' | 'dev'
+```
+
+## API Document
+- 서버를 실행시킨 후 아래 주소에서 확인할 수 있다.
+```bash
+http://localhost:8080/swagger-ui/index.html
+```
+
+## Test case
+### Run test case
+```bash
+./gradlew test
 ```

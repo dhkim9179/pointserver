@@ -15,11 +15,11 @@ public class UseDetailService {
 
     /**
      * 사용 상세 내역 조회
-     * @param orderNo 주문번호
+     * @param transactionId 거래번호
      * @return 사용 상세 내역
      */
-    public List<UseDetail> findDetail(String orderNo) {
-        return useDetailRepository.findUsageDetail(orderNo);
+    public List<UseDetail> findDetail(String transactionId) {
+        return useDetailRepository.findUsageDetail(transactionId);
     }
 
     /**

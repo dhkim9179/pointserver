@@ -26,8 +26,8 @@ public class MemberPointExpire {
     private long memberId;
 
     @Column(nullable = false)
-    @Comment("주문번호")
-    private String orderNo;
+    @Comment("거래번호")
+    private String transactionId;
 
     @Column(nullable = false)
     @Comment("소멸일")

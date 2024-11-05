@@ -6,6 +6,7 @@ import com.example.pointserver.common.entity.history.MemberPointExpire;
 import com.example.pointserver.common.entity.history.MemberPointHistory;
 import com.example.pointserver.common.enums.CancelType;
 import com.example.pointserver.common.enums.PointAction;
+import com.example.pointserver.common.enums.TransactionType;
 import com.example.pointserver.expire.ExpireService;
 import com.example.pointserver.expire.model.ExpireUpdate;
 import com.example.pointserver.history.HistoryService;
@@ -45,29 +46,29 @@ public class UseService {
     }
 
     /**
-     * 주문번호 중복 확인
-     * @param orderNo
+     * 거래번호 중복 확인
+     * @param transactionId 거래번호
      * @return
      */
-    public boolean isDuplicateOrderNo(String orderNo) {
-        List<MemberPointHistory> memberPointHistories = historyService.findHistory(orderNo);
+    public boolean isDuplicateTransactionId(String transactionId) {
+        List<MemberPointHistory> memberPointHistories = historyService.findHistory(transactionId);
         return !memberPointHistories.isEmpty();
     }
 
     /**
      * 이력 조회
      * @param memberId 회원 아이디
-     * @param orderNo 주문번호
+     * @param transactionId 거래번호
      * @return 이력
      */
-    public HistoryInfo.Use findHistory(long memberId, String orderNo) {
-        return historyService.findHistoryForUseCancel(memberId, orderNo);
+    public HistoryInfo.Use findHistory(long memberId, String transactionId) {
+        return historyService.findHistoryForUseCancel(memberId, transactionId);
     }
 
     /**
      * 사용
      * @param memberId 회원 아이디
-     * @param orderNo 주문번호
+     * @param transactionId 거래번호
      * @param point 금액
      * @param description 상세설명
      * @param expires 소멸정보
@@ -75,7 +76,8 @@ public class UseService {
     @Transactional
     public void use(
             long memberId,
-            String orderNo,
+            String transactionId,
+            String transactionType,
             int point,
             String description,
             List<MemberPointExpire> expires
@@ -86,8 +88,9 @@ public class UseService {
         // 이력 저장
         long historyId = historyService.insertHistory(
                 memberId,
-                orderNo,
-                PointAction.USE.getCode(),
+                transactionId,
+                PointAction.USE,
+                transactionType,
                 point,
                 description
         );
@@ -110,7 +113,7 @@ public class UseService {
                 ExpireUpdate memberPointExpireUpdate = ExpireUpdate.builder()
                         .expireId(expire.getId())
                         .amount(totalUsePoint)
-                        .orderNo(orderNo)
+                        .transactionId(transactionId)
                         .build();
                 expireUpdates.add(memberPointExpireUpdate);
                 break;
@@ -118,7 +121,7 @@ public class UseService {
                 ExpireUpdate expireUpdate = ExpireUpdate.builder()
                         .expireId(expire.getId())
                         .amount(expire.getExpireAmount())
-                        .orderNo(orderNo)
+                        .transactionId(transactionId)
                         .build();
                 expireUpdates.add(expireUpdate);
             }
@@ -140,7 +143,7 @@ public class UseService {
     /**
      * 전체취소
      * @param memberId 회원 아이디
-     * @param orderNo 주문번호
+     * @param transactionId 거래번호
      * @param amount 금액
      * @param description 상세내역
      * @param useDetailList 사용상세내역
@@ -148,7 +151,7 @@ public class UseService {
     @Transactional(rollbackFor = {Exception.class})
     public void cancelAll(
             long memberId,
-            String orderNo,
+            String transactionId,
             int amount,
             String description,
             List<UseDetail> useDetailList
@@ -161,17 +164,17 @@ public class UseService {
         for (UseDetail useDetail : useDetailList) {
             calculateAmount -= useDetail.getUseAmount();
             if (calculateAmount <= 0) { // 해당 금액만 처리
-                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount() + calculateAmount, useDetail);
+                restoreExpireAmount(memberId, transactionId, useDetail.getUseAmount() + calculateAmount, useDetail);
                 break;
             } else {
-                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount(), useDetail);
+                restoreExpireAmount(memberId, transactionId, useDetail.getUseAmount(), useDetail);
             }
         }
 
         // 취소 저장
         long cancelId = cancelService.insertCancel(
                 memberId,
-                orderNo,
+                transactionId,
                 PointAction.USE,
                 CancelType.ALL,
                 amount,
@@ -189,7 +192,7 @@ public class UseService {
     /**
      * 부분취소 (최초)
      * @param memberId 회원 아이디
-     * @param orderNo 주문번호
+     * @param transactionId 주문번호
      * @param amount 금액
      * @param cancelableAmount 앞으로 취소가능한 금액
      * @param description 취소사유
@@ -198,7 +201,7 @@ public class UseService {
     @Transactional(rollbackFor = {Exception.class})
     public void cancelPartial(
             long memberId,
-            String orderNo,
+            String transactionId,
             int amount,
             int cancelableAmount,
             String description,
@@ -212,17 +215,17 @@ public class UseService {
         for (UseDetail useDetail : useDetailList) {
             calculateAmount -= useDetail.getUseAmount();
             if (calculateAmount <= 0) { // 해당 금액만 처리
-                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount() + calculateAmount, useDetail);
+                restoreExpireAmount(memberId, transactionId, useDetail.getUseAmount() + calculateAmount, useDetail);
                 break;
             } else {
-                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount(), useDetail);
+                restoreExpireAmount(memberId, transactionId, useDetail.getUseAmount(), useDetail);
             }
         }
 
         // 취소 저장
         long cancelId = cancelService.insertCancel(
                 memberId,
-                orderNo,
+                transactionId,
                 PointAction.USE,
                 CancelType.PARTIAL,
                 amount,
@@ -241,7 +244,7 @@ public class UseService {
      * 부분취소 (수정)
      * @param cancelId 취소 아이디
      * @param memberId 회원 아이디
-     * @param orderNo 주문번호
+     * @param transactionId 주문번호
      * @param amount 취소금액
      * @param cancelableAmount 앞으로 취소가능한 금액
      * @param description 취소사유
@@ -251,7 +254,7 @@ public class UseService {
     public void updateCancelPartial(
             long cancelId,
             long memberId,
-            String orderNo,
+            String transactionId,
             int amount,
             int cancelableAmount,
             String description,
@@ -265,10 +268,10 @@ public class UseService {
         for (UseDetail useDetail : useDetailList) {
             calculateAmount -= useDetail.getUseAmount();
             if (calculateAmount <= 0) { // 해당 금액만 처리
-                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount() + calculateAmount, useDetail);
+                restoreExpireAmount(memberId, transactionId, useDetail.getUseAmount() + calculateAmount, useDetail);
                 break;
             } else {
-                restoreExpireAmount(memberId, orderNo, useDetail.getUseAmount(), useDetail);
+                restoreExpireAmount(memberId, transactionId, useDetail.getUseAmount(), useDetail);
             }
         }
 
@@ -289,7 +292,7 @@ public class UseService {
 
     private void restoreExpireAmount(
             long memberId,
-            String orderNo,
+            String transactionId,
             int amount,
             UseDetail useDetail
     ) {
@@ -297,7 +300,7 @@ public class UseService {
             // 소멸 금액 신규 저장
             expireService.insertExpire(
                     memberId,
-                    orderNo,
+                    transactionId,
                     LocalDate.now().plusDays(expirePeriod),
                     amount,
                     false
@@ -306,8 +309,9 @@ public class UseService {
             // 이력 저장
             historyService.insertHistory(
                     memberId,
-                    orderNo,
-                    PointAction.EARN.getCode(),
+                    transactionId,
+                    PointAction.EARN,
+                    TransactionType.ORDER.getCode(),
                     amount,
                     "사용취소 시 적립만료일에 따른 신규 적립"
             );

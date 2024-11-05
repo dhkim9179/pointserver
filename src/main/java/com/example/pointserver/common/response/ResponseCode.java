@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 public enum ResponseCode implements ResponseCodeTemplate {
     MISSING_REQUIRED_PARAMETER(100, "Missing required parameter", HttpStatus.BAD_REQUEST.value()),
     JSON_DATA_FORMAT_ERROR(101, "json data format error", HttpStatus.BAD_REQUEST.value()),
+    INVALID_TRANSACTION_TYPE(102, "invalid transaction type", HttpStatus.BAD_REQUEST.value()),
 
     // 1회 적립 금액 초과
     POINT_EXCEED_LIMIT(200, "point exceed limit", HttpStatus.BAD_REQUEST.value()),
@@ -17,7 +18,10 @@ public enum ResponseCode implements ResponseCodeTemplate {
     NO_BALANCE(203, "no balance", HttpStatus.BAD_REQUEST.value()),
     // 잔액이 사용금액보다 작은 경우
     INSUFFICIENT_BALANCE(204, "insufficient balance", HttpStatus.BAD_REQUEST.value()),
-    DUPLICATE_ORDER_NO(205, "duplicate order no", HttpStatus.CONFLICT.value()),
+    // 거래번호가 중복된 경우
+    DUPLICATE_TRANSACTION_ID(205, "duplicate transaction id", HttpStatus.BAD_REQUEST.value()),
+    // 사용은 주문만 가능
+    POINT_USAGE_ORDER_ONLY(206, "point usage order only", HttpStatus.BAD_REQUEST.value()),
 
     // 이력이 없는 경우
     NO_HISTORY(300, "no history", HttpStatus.BAD_REQUEST.value()),

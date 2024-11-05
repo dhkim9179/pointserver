@@ -10,9 +10,6 @@ spring:
   h2:
     console:
       enabled: true
-#  sql:
-#    init:
-#      data-locations: classpath*:db/sql/data.sql
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     defer-datasource-initialization: true
@@ -22,7 +19,7 @@ spring:
 
 policy:
   max-balance: 1000
-  one-time-max-earn-point: 100000
+  one-time-max-earn-point: 100
   expire:
     default-period: 365 # day
     min-period: 1 # day

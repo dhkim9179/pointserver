@@ -4,12 +4,14 @@ import com.example.pointserver.common.exception.CustomException;
 import com.example.pointserver.common.response.ResponseCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class JsonUtils {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static String toJson(Object data) {
         try {
+            objectMapper.registerModule(new JavaTimeModule());
             return objectMapper.writeValueAsString(data);
         } catch (JsonProcessingException e) {
             throw new CustomException(ResponseCode.JSON_DATA_FORMAT_ERROR, e.getMessage());

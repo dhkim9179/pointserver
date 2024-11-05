@@ -16,21 +16,21 @@ public class ExpireService {
     /**
      * 소멸 저장
      * @param memberId 회원 아이디
-     * @param orderNo 주문 번호
+     * @param transactionId 주문 번호
      * @param expireDay 소멸일
      * @param expireAmount 소멸금액
      * @param isAdmin 관리자 여부
      */
     public void insertExpire(
             long memberId,
-            String orderNo,
+            String transactionId,
             LocalDate expireDay,
             int expireAmount,
             boolean isAdmin
     ) {
         MemberPointExpire memberPointExpire = new MemberPointExpire();
         memberPointExpire.setMemberId(memberId);
-        memberPointExpire.setOrderNo(orderNo);
+        memberPointExpire.setTransactionId(transactionId);
         memberPointExpire.setExpireDay(expireDay);
         memberPointExpire.setExpireAmount(expireAmount);
         memberPointExpire.setAdmin(isAdmin);

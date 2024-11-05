@@ -27,9 +27,10 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        try {
-            if (request.getRequestURI().startsWith("/point")) {
-                RequestWrapper requestWrapper = new RequestWrapper(0L, request);
+        if (request.getRequestURI().startsWith("/point")) {
+            RequestWrapper requestWrapper = new RequestWrapper(0L, request);
+            ResponseWrapper responseWrapper = new ResponseWrapper(1L, response);
+            try {
                 RequestInfo requestInfo = RequestInfo.builder()
                         .ip(request.getRemoteAddr())
                         .body(getRequestBody(requestWrapper))
@@ -41,15 +42,10 @@ public class LoggingFilter extends OncePerRequestFilter {
                         request.getRequestURI(),
                         JsonUtils.toPrettyPrintJson(JsonUtils.toJson(requestInfo))
                 );
-                filterChain.doFilter(requestWrapper, response);
-            } else {
-                filterChain.doFilter(request, response);
-            }
-        } catch (Exception ex) {
-            // h2 database 요청 예외처리
-        } finally {
-            if (request.getRequestURI().startsWith("/point")) {
-                ResponseWrapper responseWrapper = new ResponseWrapper(1L, response);
+                filterChain.doFilter(requestWrapper, responseWrapper);
+            } catch (Exception e) {
+
+            } finally {
                 log.info("{} {} {} {}",
                         request.getMethod(),
                         request.getRequestURI(),
@@ -57,6 +53,8 @@ public class LoggingFilter extends OncePerRequestFilter {
                         JsonUtils.toPrettyPrintJson(getResponseBody(responseWrapper))
                 );
             }
+        } else {
+            filterChain.doFilter(request, response);
         }
     }
 
@@ -80,10 +78,6 @@ public class LoggingFilter extends OncePerRequestFilter {
     }
 
     private String getResponseBody(ResponseWrapper response) {
-        if (!isBinaryContentResponse(response)) {
-            org.apache.commons.lang3.StringUtils.startsWithAny(response.getContentType(), responseContentTypePrefixesExcludeLogging);
-            return "";
-        }
         return new String(response.toByteArray(), StandardCharsets.UTF_8);
     }
 
@@ -93,10 +87,6 @@ public class LoggingFilter extends OncePerRequestFilter {
 
     private boolean isBinaryContentRequest(HttpServletRequest request) {
         return isBinaryContent(request.getContentType());
-    }
-
-    private boolean isBinaryContentResponse(HttpServletResponse response) {
-        return isBinaryContent(response.getContentType());
     }
 
     private boolean isBinaryContent(String contentType) {

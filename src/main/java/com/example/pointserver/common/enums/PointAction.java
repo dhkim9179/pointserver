@@ -12,5 +12,4 @@ public enum PointAction {
     PointAction(String code) {
         this.code = code;
     }
-
 }

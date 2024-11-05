@@ -14,10 +14,10 @@ public class CancelRepositoryCustomImpl implements CancelRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public MemberPointCancel findCancel(long memberId, String orderNo) {
+    public MemberPointCancel findCancel(long memberId, String transactionId) {
         return jpaQueryFactory
                 .selectFrom(memberPointCancel)
-                .where(memberPointCancel.orderNo.eq(orderNo))
+                .where(memberPointCancel.transactionId.eq(transactionId))
                 .where(memberPointCancel.memberId.eq(memberId))
                 .fetchOne();
     }

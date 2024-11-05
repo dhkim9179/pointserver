@@ -7,12 +7,12 @@ import com.example.pointserver.common.entity.cancel.MemberPointCancel;
 import com.example.pointserver.common.entity.history.MemberPointHistory;
 import com.example.pointserver.common.enums.CancelType;
 import com.example.pointserver.common.enums.PointAction;
+import com.example.pointserver.common.enums.TransactionType;
 import com.example.pointserver.earn.repository.EarnRepository;
 import com.example.pointserver.expire.ExpireService;
 import com.example.pointserver.history.HistoryService;
 import com.example.pointserver.history.model.HistoryInfo;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,54 +38,53 @@ public class EarnService {
     }
 
     /**
-     * 주문번호 중복 확인
-     * @param orderNo
+     * 거래번호 중복 확인
+     * @param transactionId
      * @return
      */
-    public boolean isDuplicateOrderNo(String orderNo) {
-        List<MemberPointHistory> memberPointHistories = historyService.findHistory(orderNo);
+    public boolean isDuplicateTransactionId(String transactionId) {
+        List<MemberPointHistory> memberPointHistories = historyService.findHistory(transactionId);
         return !memberPointHistories.isEmpty();
     }
 
     /**
      * 취소 조회
      * @param memberId 회원 아이디
-     * @param orderNo 주문번호
+     * @param transactionId 거래번호
      * @return member_point_cancel
      */
-    public MemberPointCancel findCancel(long memberId, String orderNo) {
-        return cancelService.findCancel(memberId, orderNo);
+    public MemberPointCancel findCancel(long memberId, String transactionId) {
+        return cancelService.findCancel(memberId, transactionId);
     }
 
     /**
      * 적립 취소를 위한 이력 조회
      * @param memberId 회원아이디
-     * @param orderNo 주문번호
+     * @param transactionId 거래번호
      * @return 이력
      */
-    public HistoryInfo.Earn findHistory(long memberId, String orderNo) {
-        return historyService.findHistoryForEarnCancel(memberId, orderNo);
+    public HistoryInfo.Earn findHistory(long memberId, String transactionId) {
+        return historyService.findHistoryForEarnCancel(memberId, transactionId);
     }
 
     /**
      * 적립
      * @param memberId 회원 아이디
-     * @param orderNo 주문번호
+     * @param transactionId 주문번호
      * @param amount 금액
      * @param expireDay 만료일
      * @param description 상세설명
      * @param isNewUser 신규회원여부
-     * @param isAdmin 관리자여부
      */
     @Transactional(rollbackFor = {Exception.class})
     public void earn(
             long memberId,
-            String orderNo,
+            String transactionId,
+            String transactionType,
             int amount,
             LocalDate expireDay,
             String description,
-            boolean isNewUser,
-            boolean isAdmin
+            boolean isNewUser
     ) {
         // 잔액 업데이트
         if (isNewUser) {
@@ -100,16 +99,21 @@ public class EarnService {
         // 이력 저장
         historyService.insertHistory(
                 memberId,
-                orderNo,
-                PointAction.EARN.getCode(),
+                transactionId,
+                PointAction.EARN,
+                transactionType,
                 amount,
                 description
         );
 
         // 소멸 저장
+        boolean isAdmin = false;
+        if (transactionType.equals(TransactionType.ADMIN.getCode())) {
+            isAdmin = true;
+        }
         expireService.insertExpire(
                 memberId,
-                orderNo,
+                transactionId,
                 expireDay,
                 amount,
                 isAdmin
@@ -119,13 +123,13 @@ public class EarnService {
     /**
      * 적립 취소
      * @param memberId 회원 아이디
-     * @param orderNo 주문번호
+     * @param transactionId 거래번호
      * @param expireId 만료일
      * @param amount 금액
      * @param description 상세설명
      */
     @Transactional(rollbackFor = {Exception.class})
-    public void cancel(long memberId, String orderNo, long expireId, int amount, String description) {
+    public void cancel(long memberId, String transactionId, long expireId, int amount, String description) {
         // 잔액 차감
         earnRepository.decreaseBalance(memberId, amount);
 
@@ -135,7 +139,7 @@ public class EarnService {
         // 취소 저장
         long cancelId = cancelService.insertCancel(
                 memberId,
-                orderNo,
+                transactionId,
                 PointAction.EARN,
                 CancelType.ALL,
                 amount,

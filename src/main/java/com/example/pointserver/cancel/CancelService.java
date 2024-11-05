@@ -15,17 +15,17 @@ public class CancelService {
     /**
      * 취소 조회
      * @param memberId 회원 아이디
-     * @param orderNo 주문번호
+     * @param transactionId 거래번호
      * @return member_point_cancel
      */
-    public MemberPointCancel findCancel(long memberId, String orderNo) {
-        return cancelRepository.findCancel(memberId, orderNo);
+    public MemberPointCancel findCancel(long memberId, String transactionId) {
+        return cancelRepository.findCancel(memberId, transactionId);
     }
 
     /**
      * member_point_cancel 데이터 생성
      * @param memberId 회원 아이디
-     * @param orderNo 주문번호
+     * @param transactionId 거래번호
      * @param action 포인트 동작
      * @param type 취소동작
      * @param amount 금액
@@ -34,7 +34,7 @@ public class CancelService {
      */
     public long insertCancel(
             long memberId,
-            String orderNo,
+            String transactionId,
             PointAction action,
             CancelType type,
             int amount,
@@ -42,7 +42,7 @@ public class CancelService {
     ) {
         MemberPointCancel memberPointCancel = new MemberPointCancel();
         memberPointCancel.setMemberId(memberId);
-        memberPointCancel.setOrderNo(orderNo);
+        memberPointCancel.setTransactionId(transactionId);
         memberPointCancel.setAction(action.getCode());
         memberPointCancel.setType(type.getCode());
         memberPointCancel.setAmount(amount);

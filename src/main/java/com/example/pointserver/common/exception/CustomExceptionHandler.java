@@ -41,14 +41,14 @@ public class CustomExceptionHandler {
         ) {
             responseCode = ResponseCode.MISSING_REQUIRED_PARAMETER;
         } else if (ex instanceof DataIntegrityViolationException) {
-            responseCode = ResponseCode.DUPLICATE_ORDER_NO;
+            responseCode = ResponseCode.DUPLICATE_TRANSACTION_ID;
         }
 
         response.setStatus(responseCode.getStatus());
         return ErrorResponse.builder()
                 .code(responseCode.getCode())
                 .message(responseCode.getMessage())
-                .detail(ex.getClass().getName())
+                .detail(ex.getMessage())
                 .build();
     }
 }

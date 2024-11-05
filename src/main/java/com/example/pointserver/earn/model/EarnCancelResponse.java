@@ -1,4 +1,4 @@
-package com.example.pointserver.expire.model;
+package com.example.pointserver.earn.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ExpireUpdate {
-    private long expireId;
-    private int amount;
+public class EarnCancelResponse {
     private String transactionId;
+    private int balance;
 }
